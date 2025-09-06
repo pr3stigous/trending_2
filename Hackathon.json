@@ -1,0 +1,166 @@
+{
+  "name": "Hackathon",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "=models/gemini-2.5-pro",
+          "mode": "id"
+        },
+        "text": "Analyze this tick-tock video. Describe different scenes, people and activity in detail.",
+        "videoUrls": "={{ $json.mediaUrls.join(',') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "3e0d4412-5f2c-42b6-a426-4ecb64df3a85",
+      "name": "Analyze video",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVZJvclrqVSN7gNb",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "GdWCkxBtKWOsKjdch",
+          "mode": "list",
+          "cachedResultName": "TikTok Scraper (clockworks/tiktok-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/GdWCkxBtKWOsKjdch/input"
+        },
+        "customBody": "={\n  \"hashtags\": [\n    {{ $json.Tags.split(',').map(tag => `\"${tag.trim()}\"`).join(',') }}\n  ],\n  \"resultsPerPage\": 1,\n  \"proxyCountryCode\": \"None\",\n  \"shouldDownloadVideos\": true,\n  \"profileScrapeSections\": [\n    \"videos\"\n  ],\n  \"profileSorting\": \"latest\",\n  \"excludePinnedPosts\": false,\n  \"searchSection\": \"\",\n  \"maxProfilesPerQuery\": 10,\n  \"scrapeRelatedVideos\": false,\n  \"shouldDownloadCovers\": false,\n  \"shouldDownloadSubtitles\": false,\n  \"shouldDownloadSlideshowImages\": false,\n  \"shouldDownloadAvatars\": false,\n  \"shouldDownloadMusicCovers\": false\n}",
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        112
+      ],
+      "id": "d6c110b6-cf4e-4fad-8e2d-24acccc7b182",
+      "name": "Run an Actor and get dataset",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "YAhEzoovSu0JMRp7",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Market gen",
+        "formDescription": "Let's generate viral marketing content",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Tags",
+              "placeholder": "trending,challenge",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -688,
+        112
+      ],
+      "id": "5f57b5e8-a7ee-4624-a884-f965eab7b5db",
+      "name": "On form submission",
+      "webhookId": "677dc380-f296-4c1c-a419-b3cb41ea2548"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=<task>\nAnalyze the given TikTok video content description.  \nIdentify:  \n1. <topic> Main theme or subject </topic>  \n2. <style> Tone, mood, or aesthetics </style>  \n3. <audience> Target demographic/interest group </audience>  \n4. <trend> Current trend elements (hashtags, challenges, music, memes, visuals) </trend>  \n5. <content_idea> Actionable ideas for image/video generation aligned with the trend </content_idea>  \n\nReturn output in structured, concise form. Focus on insights useful for marketing content creation.\n</task>\n<content>\n{{ $json.content.parts.map(part => part.text).join('\\n') }}\n</content>\n"
+            },
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        32,
+        112
+      ],
+      "id": "5d425268-754e-40f8-9ad2-9ff0d1d866b3",
+      "name": "Trend Analysis",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BVZJvclrqVSN7gNb",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Analyze video": {
+      "main": [
+        [
+          {
+            "node": "Trend Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "Analyze video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "31e72a9c-cbb0-451a-bd65-8abed1a7e07f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f9fe8dba295560842afc2ce31f98d9fb4d748da63c2ef08267f19ce616422bc5"
+  },
+  "id": "HtcPmTReCWR4inAI",
+  "tags": []
+}
