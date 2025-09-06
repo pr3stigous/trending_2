@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                 String           @id @default(cuid())
+  name               String
+  status             String           @default("draft")
+  trendFormula       Json
+  productEssence     Json
+  conceptCards       ConceptCard[]
+  selectedConceptIds Json             @default("[]")
+  frames             StoryboardFrame[]
+  narratives        NarrativePlan[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model ConceptCard {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title        String
+  pitch        String
+  bestFor      String
+  lens         String
+  rationale    String
+  risks        Json     @default("[]")
+  sampleHook   String
+  frames       StoryboardFrame[]
+  narratives   NarrativePlan[]
+  createdAt    DateTime @default(now())
+}
+
+model StoryboardFrame {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  conceptId        String?
+  concept          ConceptCard? @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  sceneNumber      Int
+  startTime        Float
+  endTime          Float
+  aspectRatio      String   @default("9:16")
+  visualPrompt     String
+  actionDescription String
+  audioCue         String
+  dialogueOrVoiceover String
+  onScreenText     Json
+  imageParams      Json
+  generatedImageURL String?
+  altText          String?
+  notes            String?
+  status           String   @default("pending")
+  backgroundTaskId String?
+  createdAt        DateTime @default(now())
+
+  @@index([projectId, conceptId])
+}
+
+model NarrativePlan {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  conceptId       String
+  concept         ConceptCard @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  summary         String
+  hook            String
+  keyMessage      String
+  cta             String
+  tone            String
+  continuityNotes String
+  beats           Json      // array of beats matching frames
+  createdAt       DateTime  @default(now())
+
+  @@index([projectId, conceptId])
+}
